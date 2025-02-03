@@ -361,7 +361,6 @@ p {
     text-align: left;
 }
 
-/* The animation code */
 @keyframes fadeInOut {
     0%, 100% {
         opacity: 0;
