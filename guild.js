@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             tab.style.animation = 'color_in 0.5s forwards';
                             document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
                             document.getElementById(option.code).style.display = 'flex';
-                            window.location.hash = option.code; // Set URL fragment
+                            history.replaceState(null, null, `#${option.code}`);
                             setTimeout(() => {
                                 window.scrollTo(0, 0); // Scroll to top with delay
                             }, 1);
@@ -134,29 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const image_content_filters_select = createSelect('image_content_filters_select', setting_values.image_content_filters, settings.image_content_filters, true, 'long_select');
                 addSetting('Content Filters', image_content_filters_select);
 
-                // Fetch server image
-                fetch(`https://auth.liaa.app/guilds`, {
-                    method: 'GET',
-                    credentials: 'include'
-                })
-                    .then(response => response.json())
-                    .then(imageData => {
-                        const guildImage = imageData.find(g => g.id === guild_id)?.image || 'https://cdn.discordapp.com/embed/avatars/0.png';
-                        // Set the icon in the new div
-                        guild_icon.innerHTML = `<img src="${guildImage}" alt="Server Icon">`;
-                        // Information section placeholder
-                        information_section.innerHTML = `
-                            <p class="pop_in_fast">Name: ${guild.name}</p>
-                            <p class="pop_in_fast">Invitation URL: ${guild.invitation_url}</p>
-                            <p class="pop_in_fast">Owner ID: ${guild.owner_id}</p>
-                            <p class="pop_in_fast">Protected since: ${new Date(guild.creation_date).toLocaleDateString()}</p>
-                            <p class="pop_in_fast">Attacs defended : ${guild.attacs_defended}</p>
-                            <p class="pop_in_fast">Hyperlink : ${guild.hyperlink}</p>
-                        `;
-                    })
-                    .catch(error => {
-                        console.error('Error fetching guild image:', error);
-                    });
+                let global_members = [];
 
                 // Fetch members
                 fetch(`https://auth.liaa.app/guild/${guild_id}/users`, {
@@ -172,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         members_list.style.maxHeight = '300px';
                         members_list.style.overflowY = 'auto';
                         members.forEach((member, index) => {
+                            global_members.push(member);
                             const member_item = document.createElement('li');
                             member_item.classList.add('member-item');
                             member_item.dataset.fullName = member.name.toLowerCase();
@@ -292,6 +271,59 @@ document.addEventListener('DOMContentLoaded', () => {
                     .catch(error => {
                         console.error('Error fetching members:', error);
                 });
+
+                // Fetch server image
+                fetch(`https://auth.liaa.app/guilds`, {
+                    method: 'GET',
+                    credentials: 'include'
+                })
+                    .then(response => response.json())
+                    .then(imageData => {
+                        const guildImage = imageData.find(g => g.id === guild_id)?.image || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                        // Set the icon in the new div
+                        guild_icon.innerHTML = `<img src="${guildImage}" alt="Server Icon">`;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching guild image:', error);
+                    });
+
+                fetch(`https://auth.liaa.app/guild/${guild_id}/information`, {
+                    method: 'GET',
+                    credentials: 'include'
+                })
+                    .then(response => response.json())
+                    .then(infoData => {
+                        language_code = infoData.language;
+                        language = setting_values.language.find(l => l.code === language_code).name;
+                        if (infoData.pro_expiration == null) {
+                            infoData.pro_expiration = 'Never';
+                        } else if (new Date(infoData.pro_expiration) < new Date()) {
+                            infoData.pro_expiration = 'Expired on ' + new Date(infoData.pro_expiration).toLocaleDateString('en-GB');
+                        } else {
+                            infoData.pro_expiration = `${new Date(infoData.pro_expiration).toLocaleDateString('en-GB')} (${Math.floor((new Date(infoData.pro_expiration) - new Date()) / 86400000) + 1} days left)`;
+                        }
+                        if (infoData.pro_redeem_date == null) {
+                            infoData.pro_redeem_date = 'Never';
+                        }
+                        plans = {
+                            '0': 'Free',
+                            '1': 'Pro',
+                            '2': 'Pro Plus',
+                            '3': 'Ultimate'
+                        }
+                        infoData.pro_tier = plans[infoData.pro_tier];
+                        information_section.innerHTML = `
+                            <p class="pop_in_fast" style="display: flex; align-items: center;">Owner: <img src="${global_members.find(m => m.user_id === infoData.owner_id)?.image || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Owner Image" class="member-image-small pop_in_fast" style="margin-right: 5px;"> ${global_members.find(m => m.user_id === infoData.owner_id)?.name || 'Unknown'}</p>
+                            <p class="pop_in_fast">Join Date: ${new Date(infoData.join_date).toLocaleDateString('en-GB')}</p>
+                            <p class="pop_in_fast">Language: ${language}</p>
+                            <p class="pop_in_fast">Plan: ${infoData.pro_tier}</p>
+                            <p class="pop_in_fast">Expiration Date: ${infoData.pro_expiration}</p>
+                            <p class="pop_in_fast">Redeem Date: ${infoData.pro_redeem_date === 'Never' ? 'Never' : new Date(infoData.pro_redeem_date).toLocaleDateString('en-GB')}</p>
+                        `;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching guild information:', error);
+                    });
 
                 last_backup = {"time": "2021-08-01T00:00:00.000Z", "channels": 10, "roles": 5, "users": 100}
                 // Backup section placeholder

@@ -26,12 +26,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (guild.image === null) {
                     guild.image = 'https://cdn.discordapp.com/embed/avatars/0.png';
                 }
-                guildElement.innerHTML = `
-                <img src="${guild.image}" alt="${guild.name} icon" class="icon pop_in_fast">
-                <a href="https://liaa.app/guild/${guild.id}" class="guild_href">
-                <h3 class="guild_name guild_href pop_in_fast inline_block">${guild.name}<img class="guild_decoration" alt="decor" src="https://liaa.app/icons/premium.png"></h3>
-                </a>
-            `;
+                if (guild.tier === 1) {
+                    guildElement.innerHTML = `
+                    <img src="${guild.image}" alt="${guild.name} icon" class="icon pop_in_fast">
+                    <a href="https://liaa.app/guild/${guild.id}" class="guild_href">
+                    <h3 class="guild_name guild_href pop_in_fast inline_block">${guild.name}<img class="guild_decoration" alt="decor" src="https://liaa.app/icons/premium.png"></h3>
+                    </a>
+                    `;
+                } else {
+                    guildElement.innerHTML = `
+                    <img src="${guild.image}" alt="${guild.name} icon" class="icon pop_in_fast">
+                    <a href="https://liaa.app/guild/${guild.id}" class="guild_href">
+                    <h3 class="guild_name guild_href pop_in_fast inline_block">${guild.name}</h3>
+                    </a>
+                    `;
+                }
                 document.querySelector('.guilds').appendChild(guildElement);
                 if (index < data.length - 1) {
                     const separator = document.createElement('hr');
