@@ -325,15 +325,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('Error fetching guild information:', error);
                     });
 
-                last_backup = {"time": "2021-08-01T00:00:00.000Z", "channels": 10, "roles": 5, "users": 100}
-                // Backup section placeholder
-                backup_section.innerHTML = `
-                    <h2 class="pop_in_fast">Last Backup</h2>
-                    <p class="pop_in_fast">Time: ${new Date(last_backup.time).toLocaleString()}</p>
-                    <p class="pop_in_fast">Channels Backed Up: ${last_backup.channels}</p>
-                    <p class="pop_in_fast">Roles Backed Up: ${last_backup.roles}</p>
-                    <p class="pop_in_fast">Users Backed Up: ${last_backup.users}</p>
-                `;
+                // Fetch backup stats
+                fetch(`https://auth.liaa.app/guild/${guild_id}/backup_stats`, {
+                    method: 'GET',
+                    credentials: 'include'
+                })
+                    .then(response => response.json())
+                    .then(backupData => {
+                        backup_section.innerHTML = `
+                            <h2 class="pop_in_fast">Last Backup</h2>
+                            <p class="pop_in_fast">Time: ${new Date(backupData.last_backup).toLocaleString('en-GB')}</p>
+                            <p class="pop_in_fast">Channels Backed Up: ${backupData.channels}</p>
+                            <p class="pop_in_fast">Roles Backed Up: ${backupData.roles}</p>
+                            <p class="pop_in_fast">Users Backed Up: ${backupData.users}</p>
+                        `;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching backup stats:', error);
+                    });
 
                 // Save button
                 let save_button = null;
